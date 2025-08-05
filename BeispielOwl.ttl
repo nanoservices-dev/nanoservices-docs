@@ -1,0 +1,85 @@
+@prefix nano: <http://nanoservices.dev/ns#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+### -- System-Ebene -------------------------------------
+
+nano:System a owl:Class ;
+    rdfs:label "System"@en ;
+    rdfs:comment "A self-contained nanoServices deployment or pod."@en .
+
+nano:belongsToSystem a owl:ObjectProperty ;
+    rdfs:domain owl:Thing ;
+    rdfs:range nano:System ;
+    rdfs:label "belongs to system"@en .
+
+### -- Services ----------------------------------------
+
+nano:Service a owl:Class ;
+    rdfs:label "Service"@en ;
+    rdfs:comment "Any nanoService registered in a system."@en .
+
+nano:hasApiGrounding a owl:ObjectProperty ;
+    rdfs:domain nano:Service ;
+    rdfs:range nano:ApiGrounding .
+
+nano:hasApiOperation a owl:ObjectProperty ;
+    rdfs:domain nano:Service ;
+    rdfs:range nano:ApiOperation .
+
+### -- SupervisorService ------------------------------
+
+nano:SupervisorService a owl:Class ;
+    rdfs:subClassOf nano:Service ;
+    rdfs:label "Supervisor Service"@en ;
+    rdfs:comment "Service for system supervision and process management."@en .
+
+### -- Grounding (Temporal) ---------------------------
+
+nano:ApiGrounding a owl:Class ;
+    rdfs:label "API Grounding"@en .
+
+nano:TemporalApiGrounding a owl:Class ;
+    rdfs:subClassOf nano:ApiGrounding ;
+    rdfs:label "Temporal API Grounding"@en .
+
+nano:basePath a owl:DatatypeProperty ;
+    rdfs:domain nano:ApiGrounding ;
+    rdfs:range xsd:string .
+
+nano:temporalTaskQueue a owl:DatatypeProperty ;
+    rdfs:domain nano:TemporalApiGrounding ;
+    rdfs:range xsd:string .
+
+### -- Operation --------------------------------------
+
+nano:ApiOperation a owl:Class ;
+    rdfs:label "API Operation"@en .
+
+nano:forTemporalProcess a owl:ObjectProperty ;
+    rdfs:domain nano:ApiOperation ;
+    rdfs:range nano:TemporalProcess ;
+    rdfs:label "for Temporal Workflow"@en .
+
+### -- TemporalProcess --------------------------------
+
+nano:TemporalProcess a owl:Class ;
+    rdfs:label "Temporal Workflow Process"@en .
+
+### -- Beispielinstanz Supervisor.deleteProcess -------
+
+# SupervisorService-Instanz (z. B. im Namespace urn:jojo:)
+
+<urn:jojo:supervisor> a nano:SupervisorService ;
+    nano:belongsToSystem <urn:jojo:system> ;
+    nano:hasApiGrounding <urn:jojo:supervisorGrounding> ;
+    nano:hasApiOperation <urn:jojo:deleteProcess> .
+
+<urn:jojo:supervisorGrounding> a nano:TemporalApiGrounding ;
+    nano:basePath "http://localhost:9001/RPC2" ;
+    nano:temporalTaskQueue "SUPERVISOR_TASKS" .
+
+<urn:jojo:deleteProcess> a nano:ApiOperation ;
+    nano:forTemporalProcess <urn:jojo:deleteProcessProcess> .
+
+<urn:jojo:deleteProcessProcess> a nano:TemporalProcess ;
+    rdfs:label "DeleteProcess Workflow"@en .
