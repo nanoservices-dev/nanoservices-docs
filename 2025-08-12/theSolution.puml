@@ -1,0 +1,82 @@
+@startuml
+title nServices — Zwitter-Kern (Idea ∩ World)
+
+class Entity {
+  version : String
+  label   : String
+  comment : String
+}
+
+' Rollen als Notizen gedacht (keine harte Vererbung nötig)
+class IdeaRole {
+  type : String
+}
+class WorldRole {
+  status : String
+}
+
+class Manifestation {
+  resource : String
+  status   : String        ' World-Aspekt
+}
+
+class Port {
+  contentType : String
+  type        : String     ' Idea-Aspekt
+  resource    : String     ' erbt i.S. von Manifestation (vereinfacht abgebildet)
+  status      : String
+}
+
+class System {
+  uId     : String
+  type    : String         ' Idea-Aspekt
+  resource: String
+  status  : String
+  ' elements: nur reale & Mixed-Objekte (siehe Note)
+}
+
+class Service {
+  uId     : String
+  type    : String
+  resource: String
+  status  : String
+}
+
+class NanoService {
+  uId     : String
+  type    : String
+  resource: String
+  status  : String
+}
+
+Manifestation <|-- Port
+Port <|-- System
+System <|-- Service
+Service <|-- NanoService
+
+' Mixed-Objekte (Bridge via Referenzen)
+class Persona {
+  worldRef : String
+  ideaRef  : String
+}
+
+class Message {
+  ideaRef       : String
+  resource      : String
+  payload       : String
+  contentType   : String
+  correlationId : String
+  workflowId    : String
+  runId         : String
+  resolvedWorldRef : String
+}
+
+note right of System
+  elements enthält:
+   - Manifestations (real)
+   - Mixed (Persona, Message, Perspective, Policy, Projection)
+  Reine Idea-Knoten werden nur referenziert.
+  Port/System/Service/NanoService sind ZWITTER
+  (führen type + resource/status).
+end note
+@enduml

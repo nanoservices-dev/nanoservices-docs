@@ -1,0 +1,67 @@
+@prefix nano: <https://nanoservices.dev/ontology#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+#################################################################
+# Lifecycle vocabulary (works with Person/Patient, generic)
+#################################################################
+
+nano:LifecycleSpec a owl:Class ; rdfs:subClassOf nano:Idea ;
+  rdfs:label "LifecycleSpec" ; rdfs:comment "Declarative lifecycle: states, transitions, policies." .
+
+nano:State      a owl:Class ; rdfs:subClassOf nano:Idea ; rdfs:label "State" .
+nano:Transition a owl:Class ; rdfs:subClassOf nano:Idea ; rdfs:label "Transition" .
+
+nano:appliesToClass a owl:ObjectProperty ;
+  rdfs:domain nano:LifecycleSpec ; rdfs:range rdfs:Class ;
+  rdfs:label "applies to class" .
+
+nano:hasState      a owl:ObjectProperty ; rdfs:domain nano:LifecycleSpec ; rdfs:range nano:State .
+nano:hasTransition a owl:ObjectProperty ; rdfs:domain nano:LifecycleSpec ; rdfs:range nano:Transition .
+
+nano:fromState a owl:ObjectProperty ; rdfs:domain nano:Transition ; rdfs:range nano:State .
+nano:toState   a owl:ObjectProperty ; rdfs:domain nano:Transition ; rdfs:range nano:State .
+
+nano:guard     a owl:DatatypeProperty ; rdfs:domain nano:Transition ; rdfs:range xsd:string ;
+  rdfs:comment "Boolean expression or SPARQL ASK string that must evaluate true." .
+
+nano:action    a owl:ObjectProperty ; rdfs:domain nano:Transition ;
+  rdfs:range [ a owl:Class ; owl:unionOf ( nano:PlanSpec nano:TaskSpec ) ] ;
+  rdfs:comment "PlanSpec or TaskSpec executed when transition fires." .
+
+# Minimal instance data for a Patient lifecycle demo
+@prefix ex: <https://example.org/demo#> .
+
+ex:Patient a owl:Class ; rdfs:subClassOf nano:Person .
+
+ex:PatientLifecycle a nano:LifecycleSpec ;
+  nano:appliesToClass ex:Patient ;
+  nano:hasState ex:Registered, ex:Scheduled, ex:InTreatment, ex:Completed ;
+  nano:hasTransition ex:t_register, ex:t_schedule, ex:t_begin, ex:t_finish .
+
+ex:Registered  a nano:State ; rdfs:label "Registered" .
+ex:Scheduled   a nano:State ; rdfs:label "Scheduled" .
+ex:InTreatment a nano:State ; rdfs:label "InTreatment" .
+ex:Completed   a nano:State ; rdfs:label "Completed" .
+
+# Transitions with sample actions (PlanSpec/TaskSpec IRIs)
+ex:t_register a nano:Transition ;
+  rdfs:label "register→schedule" ;
+  nano:fromState ex:Registered ; nano:toState ex:Scheduled ;
+  nano:action ex:Plan.RegisterPatient .
+
+ex:t_schedule a nano:Transition ;
+  rdfs:label "schedule→begin" ;
+  nano:fromState ex:Scheduled ; nano:toState ex:InTreatment ;
+  nano:action ex:Task.PrepareRoom .
+
+ex:t_begin a nano:Transition ;
+  rdfs:label "begin→finish" ;
+  nano:fromState ex:InTreatment ; nano:toState ex:Completed ;
+  nano:action ex:Plan.PerformTreatment .
+
+ex:t_finish a nano:Transition ;
+  rdfs:label "finish→complete" ;
+  nano:fromState ex:Completed ; nano:toState ex:Completed ;
+  nano:action ex:Task.ArchiveRecord .

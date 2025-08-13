@@ -1,0 +1,61 @@
+@startuml
+title nServices — kompatible UML (ohne Mehrfachvererbung/Generics)
+
+' --- Basistyp ---
+class Entity {
+  version : String
+  label   : String
+  comment : String
+}
+
+' --- Polaritäten ---
+class World {
+  status : String
+}
+class Idea {
+  type : String
+}
+
+Entity <|-- World
+Entity <|-- Idea
+
+' --- Manifestation (real gebunden) ---
+class Manifestation {
+  resource : String
+}
+World <|-- Manifestation
+
+' --- Transformation (Zweck/Funktion) ---
+class Transformation {
+  purpose : String
+}
+Idea <|-- Transformation
+
+' --- Port (Membran / klassifizierter IO) ---
+class Port {
+  contentType : String
+}
+Manifestation <|-- Port
+
+' --- System (World-seitig; enthält reale Teile) ---
+class System {
+  uId : String
+  ' Elemente als Multiplizität statt Generics
+  elements : Manifestation [*]
+}
+Port <|-- System
+
+' --- Contract (vertraglicher Rahmen) ---
+class Contract
+
+' --- Policy (ohne Mehrfachvererbung, aber mit den nötigen Eigenschaften) ---
+class Policy {
+  resource     : String
+  contentType  : String
+}
+Contract <|-- Policy
+
+' --- Semantische Relationen ---
+Policy --> System : rules
+System --> Policy : respects
+@enduml

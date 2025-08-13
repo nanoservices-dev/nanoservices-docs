@@ -1,0 +1,28 @@
+@startuml
+title nServices — Sequence: ideaRef → Routing → Temporal → Service
+
+actor Client
+participant "Router\n(Policy + SPARQL)" as Router
+participant "Temporal" as Temporal
+participant "Service-Instanz\n(NanoService)" as Service
+
+Client -> Router : send(Message)\nideaRef, payload, contentType, correlationId
+activate Router
+
+Router -> Router : read Policies (RDF)\nresolve class from ideaRef
+Router -> Router : discover instances via SPARQL\nselect by balancing policy
+Router -> Temporal : start Activity/Workflow\n(taskQueue of chosen instance)
+activate Temporal
+
+Temporal -> Service : invoke(task)\nwith payload/contentType
+activate Service
+Service --> Temporal : result/ack
+deactivate Service
+
+Temporal --> Router : workflowId, runId
+deactivate Temporal
+
+Router -> Router : set resolvedWorldRef\n(URI der gewählten Instanz)
+Router --> Client : ack(result)\n+ workflowId/runId\n+ resolvedWorldRef
+deactivate Router
+@enduml

@@ -1,0 +1,17 @@
+{
+  "@context": { "nano": "https://nanoservices.dev/ontology#", "ex": "https://example.org/demo#" },
+  "@id": "ex:Plan.ImportProcess",
+  "@type": "nano:PlanSpec",
+  "nano:hasTask": [
+    {
+      "@id": "ex:Task.Fetch",
+      "@type": "nano:TaskSpec",
+      "nano:hasGrounding": { "@type": "nano:HttpGrounding", "nano:url": "https://api.example.com/data", "nano:method": "GET" }
+    },
+    {
+      "@id": "ex:Task.Process",
+      "@type": "nano:TaskSpec",
+      "nano:hasGrounding": { "@type": "nano:TemporalActivityGrounding", "nano:activityName": "ProcessData", "nano:queue": "PROC" }
+    }
+  ]
+}

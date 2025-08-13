@@ -1,0 +1,19 @@
+@prefix sh:   <http://www.w3.org/ns/shacl#> .
+@prefix nano: <https://nanoservices.dev/ontology#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+# Persons/Services must be in TheWorld
+nano:PersonWorldShape a sh:NodeShape ;
+  sh:targetClass nano:Person ;
+  sh:property [ sh:path nano:inWorld ; sh:minCount 1 ; sh:maxCount 1 ; sh:hasValue nano:TheWorld ] .
+
+nano:ServiceWorldShape a sh:NodeShape ;
+  sh:targetClass nano:Service ;
+  sh:property [ sh:path nano:inWorld ; sh:minCount 1 ; sh:maxCount 1 ; sh:hasValue nano:TheWorld ] .
+
+# Every TaskRun should reference exactly one NanoService
+nano:TaskRunShape a sh:NodeShape ;
+  sh:targetClass nano:TaskRun ;
+  sh:property [
+    sh:path nano:invokesNService ; sh:minCount 1 ; sh:maxCount 1
+  ] .

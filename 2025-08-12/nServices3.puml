@@ -1,0 +1,68 @@
+@startuml
+title nServices — Persona/Message als Mixed-Objekte
+
+class Entity {
+  version : String
+  label   : String
+  comment : String
+}
+
+class World {
+  status : String
+}
+
+class Idea {
+  type : String
+}
+
+Entity <|-- World
+Entity <|-- Idea
+
+class Manifestation {
+  resource : String
+}
+World <|-- Manifestation
+
+class Port {
+  contentType : String
+}
+Manifestation <|-- Port
+
+class System {
+  uId : String
+  elements : Manifestation*   ' plus Mixed-Objekte (siehe Hinweis)
+}
+Port <|-- System
+
+class Contract
+
+class Policy {
+  resource    : String
+  contentType : String
+}
+Contract <|-- Policy
+
+' --- Mixed-Objekte (Bridge durch Referenzen, keine Vererbung nötig)
+class Persona {
+  worldRef : String
+  ideaRef  : String
+}
+
+class Message {
+  worldRef    : String
+  ideaRef     : String
+  payload     : String
+  contentType : String
+}
+
+' Semantische Relationen
+Policy --> System : rules
+System --> Policy : respects
+
+note right of System
+  elements enthält:
+   - Manifestations (real)
+   - Mixed (Persona, Message, Perspective, Policy, Projection)
+  Reine Idea-Knoten werden nur referenziert.
+end note
+@enduml

@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8"/>
+  <title>nano: Workflow Editor (Blockly – Safe Mode)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <script src="https://unpkg.com/blockly/blockly.min.js"></script>
+  <style>
+    html, body { height: 100%; margin: 0; font-family: Inter, system-ui, sans-serif; }
+    header { padding: 6px 14px; background: #fafafa; border-bottom: 1px solid #ddd; display:flex; gap:8px; align-items:center; }
+    header h1 { font-size: 16px; margin: 0; font-weight: 600; }
+    .btn { background: #3949ab; color: #fff; border: 0; padding: 6px 10px; border-radius: 4px; cursor: pointer; }
+    #blocklyDiv { width: 100%; height: calc(100% - 50px); }
+    textarea { width: 100%; height: 160px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; box-sizing: border-box; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>nano: Workflow Editor</h1>
+    <button class="btn" id="btnExportTTL">Export → TTL</button>
+    <button class="btn" id="btnClear">Neu</button>
+    <span style="margin-left:auto;color:#777;font-size:12px">Safe Mode (ohne Plugins)</span>
+  </header>
+
+  <div id="blocklyDiv"></div>
+  <textarea id="outTTL" placeholder="Turtle-Export …"></textarea>
+
+  <script>
+    window.addEventListener('load', () => {
+      // -------- Utils
+      function addIOFields(block, spec) {
+        spec.forEach(s => {
+          block.appendDummyInput()
+               .appendField(s.label)
+               .appendField(new Blockly.FieldTextInput(s.default || ''), s.name);
+        });
+        block.appendDummyInput().appendField("out")
+             .appendField(new Blockly.FieldTextInput(""), "OUT");
+        block.setPreviousStatement(true);
+        block.setNextStatement(true);
+      }
+      function esc(str){return String(str??'').replace(/\\/g,'\\\\').replace(/"/g,'\\"');}
+      function iriOrStr(val){
+        if(!val) return '""';
+        if(/^(ex:|nano:)/.test(val)) return val;
+        if(/^https?:/.test(val)) return `<${val}>`;
+        return `"${esc(val)}"`;
+      }
+
+      // -------- Blocks (ohne externe Felder)
+      Blockly.Blocks['nano_fs_write'] = { init:function(){
+        this.setColour('#3949ab'); this.appendDummyInput().appendField("FS_WRITE");
+        addIOFields(this, [
+          {name:"PATH",label:"path",default:"/var/jojo/a.txt"},
+          {name:"CONTENT",label:"content",default:"x"},
+          {name:"EFFECTON",label:"effectOn",default:"ex:fileA"}
+        ]);
+      }};
+      Blockly.Blocks['nano_fuseki_construct'] = { init:function(){
+        this.setColour('#3949ab'); this.appendDummyInput().appendField("FUSEKI_CONSTRUCT");
+        addIOFields(this, [
+          {name:"ENDPOINT",label:"endpoint",default:"http://fuseki:3030/jojo"},
+          {name:"SPARQL",label:"sparql",default:"CONSTRUCT { ?s ?p ?o } WHERE { ?s ?p ?o }"}
+        ]);
+      }};
+      Blockly.Blocks['nano_fuseki_put_graph'] = { init:function(){
+        this.setColour('#3949ab'); this.appendDummyInput().appendField("FUSEKI_PUT_GRAPH");
+        addIOFields(this, [
+          {name:"ENDPOINT",label:"endpoint",default:"http://fuseki:3030/jojo"},
+          {name:"GRAPHURI",label:"graphUri",default:"https://data.jojo.local/graph/training-plan"},
+          {name:"INREF",label:"inRef",default:"proj.graph"}
+        ]);
+      }};
+      Blockly.Blocks['nano_projection_apply'] = { init:function(){
+        this.setColour('#3949ab'); this.appendDummyInput().appendField("PROJECTION_APPLY");
+        addIOFields(this, [
+          {name:"SOURCE",label:"source",default:"world:jojo"},
+          {name:"TYPE",label:"asType",default:"idea:hypertrophy"},
+          {name:"QUERY",label:"query",default:"CONSTRUCT { ?s ?p ?o } WHERE { GRAPH <urn:jojo:training> { ?s ?p ?o } }"},
+          {name:"MODE",label:"mode",default:"by-ref"}
+        ]);
+      }};
+      Blockly.Blocks['nano_otp_verify'] = { init:function(){
+        this.setColour('#00897b'); this.appendDummyInput().appendField("OTP_VERIFY");
+        addIOFields(this, [
+          {name:"ISSUER",label:"issuer",default:"nanoServices"},
+          {name:"DIGITS",label:"digits",default:"6"},
+          {name:"PERIOD",label:"period",default:"30"}
+        ]);
+      }};
+      Blockly.Blocks['nano_temporal_signal_with_start'] = { init:function(){
+        this.setColour('#00897b'); this.appendDummyInput().appendField("TEMPORAL_SIGNAL_WITH_START");
+        addIOFields(this, [
+          {name:"WORKFLOWID",label:"workflowId",default:"JOJO-TRAIN-2025-08-10-0010"},
+          {name:"SIGNAL",label:"signalName",default:"StartTraining"},
+          {name:"TASKQ",label:"taskQueue",default:"FUSEKI_TASKS"},
+          {name:"REUSE",label:"reusePolicy",default:"REJECT_DUPLICATE"},
+          {name:"INPUT",label:"input",default:'{"user":"jojo"}'}
+        ]);
+      }};
+      Blockly.Blocks['nano_schedule'] = { init:function(){
+        this.setColour('#ff7043'); this.appendDummyInput().appendField("SCHEDULE");
+        // Fallback: kein FieldDate → TextInput
+        this.appendDummyInput().appendField("atDate")
+            .appendField(new Blockly.FieldTextInput("2025-08-10"), "ATDATE");
+        this.appendDummyInput().appendField("cron")
+            .appendField(new Blockly.FieldTextInput("@once"), "CRON");
+        this.setPreviousStatement(true); this.setNextStatement(true);
+      }};
+
+      // -------- JSON Toolbox (kein XML, kein Menü)
+      const toolbox = {
+        "kind": "flyoutToolbox",
+        "contents": [
+          { "kind": "block", "type": "nano_fs_write" },
+          { "kind": "block", "type": "nano_fuseki_construct" },
+          { "kind": "block", "type": "nano_fuseki_put_graph" },
+          { "kind": "block", "type": "nano_projection_apply" },
+          { "kind": "block", "type": "nano_otp_verify" },
+          { "kind": "block", "type": "nano_temporal_signal_with_start" },
+          { "kind": "block", "type": "nano_schedule" }
+        ]
+      };
+
+      // -------- Workspace
+      const workspace = Blockly.inject('blocklyDiv', {
+        toolbox,
+        grid: {spacing: 20, length: 1, colour: '#eee', snap: true},
+        zoom: {controls: true, wheel: true, startScale: 0.8, maxScale: 1.2, minScale: 0.5},
+        renderer: 'geras',
+        trashcan: true
+      });
+
+      // -------- Export
+      function emitInstr(block, op, pairs){
+        const id=`ex:i_${block.id.substring(0,8)}`;
+        let ttl=`${id} a nano:Instruction ;\n  nano:op "${op}" ;\n`;
+        pairs.forEach(([k,v])=>{ if(v) ttl+=`  nano:${k} ${iriOrStr(v)} ;\n`;});
+        const out=block.getFieldValue("OUT"); if(out) ttl+=`  nano:out "${esc(out)}" ;\n`;
+        ttl=ttl.replace(/;\n$/,".\n"); return ttl;
+      }
+      function generateTTL(){
+        let ttl="@prefix nano: <https://nanoservices.dev/ontology#> .\n@prefix ex: <https://nanoservices.dev/examples#> .\n\n";
+        workspace.getTopBlocks(true).forEach(b=>{
+          switch(b.type){
+            case'nano_fs_write': ttl+=emitInstr(b,'FS_WRITE',[['path',b.getFieldValue('PATH')],['content',b.getFieldValue('CONTENT')],['effectOn',b.getFieldValue('EFFECTON')]]); break;
+            case'nano_fuseki_construct': ttl+=emitInstr(b,'FUSEKI_CONSTRUCT',[['endpoint',b.getFieldValue('ENDPOINT')],['sparql',b.getFieldValue('SPARQL')]]); break;
+            case'nano_fuseki_put_graph': ttl+=emitInstr(b,'FUSEKI_PUT_GRAPH',[['endpoint',b.getFieldValue('ENDPOINT')],['graphUri',b.getFieldValue('GRAPHURI')],['inRef',b.getFieldValue('INREF')]]); break;
+            case'nano_projection_apply': ttl+=emitInstr(b,'PROJECTION_APPLY',[['source',b.getFieldValue('SOURCE')],['type',b.getFieldValue('TYPE')],['query',b.getFieldValue('QUERY')],['mode',b.getFieldValue('MODE')]]); break;
+            case'nano_otp_verify': ttl+=emitInstr(b,'OTP_VERIFY',[['issuer',b.getFieldValue('ISSUER')],['digits',b.getFieldValue('DIGITS')],['period',b.getFieldValue('PERIOD')]]); break;
+            case'nano_temporal_signal_with_start': ttl+=emitInstr(b,'TEMPORAL_SIGNAL_WITH_START',[['workflowId',b.getFieldValue('WORKFLOWID')],['signalName',b.getFieldValue('SIGNAL')],['taskQueue',b.getFieldValue('TASKQ')],['reusePolicy',b.getFieldValue('REUSE')],['input',b.getFieldValue('INPUT')]]); break;
+            case'nano_schedule': ttl+=emitInstr(b,'SCHEDULE',[['atDate',b.getFieldValue('ATDATE')],['cron',b.getFieldValue('CRON')]]); break;
+          }
+        });
+        return ttl;
+      }
+
+      document.getElementById('btnExportTTL').onclick=()=>{ document.getElementById('outTTL').value=generateTTL(); };
+      document.getElementById('btnClear').onclick=()=>{ workspace.clear(); document.getElementById('outTTL').value=''; };
+    });
+  </script>
+</body>
+</html>

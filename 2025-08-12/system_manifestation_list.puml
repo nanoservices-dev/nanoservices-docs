@@ -1,0 +1,39 @@
+
+@startuml
+title Variante 2: System mit List<Manifestation>
+
+interface Entity {
+  +version : String
+}
+
+interface Idea {
+}
+
+interface World {
+}
+
+class Manifestation {
+  +resource : String
+}
+class Port {
+  +contentType : String
+}
+class System {
+  +uId : String
+  +elements : List<Manifestation>
+}
+class Service
+class NanoService
+
+Entity <|-- Manifestation
+Manifestation <|-- Port
+Port <|-- System
+System <|-- Service
+Service <|-- NanoService
+
+Entity <|-- Idea
+Entity <|-- World
+Idea <|-- Persona
+World <|-- Persona
+
+@enduml

@@ -1,0 +1,162 @@
+@prefix rdf:   <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:   <http://www.w3.org/2002/07/owl#> .
+@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
+@prefix nano:  <https://nanoservices.dev/ontology#> .
+
+nano: a owl:Ontology ;
+  rdfs:label "nanoServices (Stand: Diagramm)" .
+
+##########
+# Klassen
+##########
+nano:Entity        a owl:Class .
+nano:World         a owl:Class .
+nano:Idea          a owl:Class .
+nano:Persona       a owl:Class .
+nano:Manifestation a owl:Class .
+nano:Transformation a owl:Class .
+nano:Projection    a owl:Class .
+nano:Port          a owl:Class .
+nano:View          a owl:Class .
+nano:Perspective   a owl:Class .
+nano:System        a owl:Class .
+nano:Contract      a owl:Class .
+nano:Policy        a owl:Class .
+nano:Service       a owl:Class .
+nano:Plan          a owl:Class .
+nano:Schedule      a owl:Class .
+nano:NanoService   a owl:Class .
+nano:Message       a owl:Class .
+nano:Process       a owl:Class .
+nano:Task          a owl:Class .
+nano:Motivation    a owl:Class .
+nano:Instruction   a owl:Class .
+
+########################
+# Klassenbeziehungen
+########################
+# (nur die im Bild klar erkennbare Vererbung)
+nano:World         rdfs:subClassOf nano:Entity .
+nano:Idea          rdfs:subClassOf nano:Entity .
+nano:Manifestation rdfs:subClassOf nano:Entity .
+nano:Port          rdfs:subClassOf nano:Manifestation .
+nano:System        rdfs:subClassOf nano:Port .
+nano:Service       rdfs:subClassOf nano:System .
+nano:NanoService   rdfs:subClassOf nano:Service .  
+
+########################
+# Daten-Properties (Attribute)
+########################
+
+# Entity: VERSION, LABEL, CONTENT
+nano:version a owl:DatatypeProperty ; rdfs:domain nano:Entity ; rdfs:range xsd:string .
+nano:label   a owl:DatatypeProperty ; rdfs:domain nano:Entity ; rdfs:range xsd:string .
+nano:comment a owl:DatatypeProperty ; rdfs:domain nano:Entity ; rdfs:range xsd:string .
+
+# World: STATUS
+nano:status a owl:DatatypeProperty ; rdfs:domain nano:World ; rdfs:range xsd:string .
+
+# Idea: TYPE
+nano:type a owl:DatatypeProperty ; rdfs:domain nano:Idea ; rdfs:range xsd:string .
+
+# Manifestation: TIME + RESOURCE
+nano:time a owl:DatatypeProperty ; rdfs:domain nano:Manifestation ; rdfs:range xsd:dateTime .
+nano:resource a owl:DatatypeProperty ; rdfs:domain nano:Manifestation ; rdfs:range xsd:anyURI .
+
+# Transformation: PURPOSE
+nano:purpose a owl:DatatypeProperty ; rdfs:domain nano:Transformation ; rdfs:range xsd:string .
+
+# Projection : CONTENT TYPE
+nano:contentType a owl:DatatypeProperty ; rdfs:domain nano:Projection ; rdfs:range xsd:string .
+
+# Port: UID
+nano:uid a owl:DatatypeProperty ; rdfs:domain nano:Port ; rdfs:range xsd:string .
+
+# View: LANGUAGE
+nano:language a owl:DatatypeProperty ; rdfs:domain nano:View ; rdfs:range xsd:string .
+
+# Contract: PARTY (List)
+
+# System: ELEMENTS (List)
+
+
+########################
+# Objekt-Properties (Methoden-Getter)
+########################
+
+# World ↔ Persona (grounds + enriches)
+nano:grounds a owl:ObjectProperty ; rdfs:domain nano:World ; rdfs:range nano:Persona .
+nano:enriches a owl:ObjectProperty ; rdfs:domain nano:Persona ; rdfs:range nano:World .
+
+# Persona ↔ Manifestation (manifests + reflects)
+nano:manifests a owl:ObjectProperty ; rdfs:domain nano:Persona ; rdfs:range nano:Manifestation .
+nano:reflects a owl:ObjectProperty ; rdfs:domain nano:Manifestation ; rdfs:range nano:Persona .
+
+# Manifestation ↔ Transformation (projects + assumes)
+nano:projects a owl:ObjectProperty ; rdfs:domain nano:Manifestation ; rdfs:range nano:Transformation .
+nano:assumes a owl:ObjectProperty ; rdfs:domain nano:Transformation ; rdfs:range nano:Manifestation .
+
+# Manifestation ↔ Projection (throws + simplifies)
+nano:throws a owl:ObjectProperty ; rdfs:domain nano:Manifestation ; rdfs:range nano:Projection .
+nano:simplifies a owl:ObjectProperty ; rdfs:domain nano:Projection ; rdfs:range nano:Manifestation .
+
+# Projection ↔ Transformation (abstracts + instantiates)
+nano:abstracts a own:ObjectProperty ; rdfs:domain rdfs:nano:Projection ; rdfs:range nano:Transformation .
+nano:instantiates a own:ObjectProperty ; rdfs:domain rdfs:nano:Transformation ; rdfs:range nano:Projection .
+
+# Port ↔ View (allows + requires)
+nano:allows a own:ObjectProperty ; rdfs:domain rdfs:nano:Port ; rdfs:range nano:View .
+nano:requires a own:ObjectProperty ; rdfs:domain rdfs:nano:View ; rdfs:range nano:Port .
+
+# Port ↔ Perspective (opens + secures)
+nano:opens a own:ObjectProperty ; rdfs:domain rdfs:nano:Port ; rdfs:range nano:Perspective .
+nano:secures a own:ObjectProperty ; rdfs:domain rdfs:nano:Perspective ; rdfs:range nano:Port .
+
+# Perspective ↔ View (ranges + concretizes)
+nano:ranges a own:ObjectProperty ; rdfs:domain rdfs:nano:Perspective ; rdfs:range nano:View .
+nano:concretizes a own:ObjectProperty ; rdfs:domain rdfs:nano:View ; rdfs:range nano:Perspective .
+
+# System ↔ Contract (serves + restricts)
+nano:serves a own:ObjectProperty ; rdfs:domain rdfs:nano:System ; rdfs:range nano:Contract .
+nano:restricts a own:ObjectProperty ; rdfs:domain rdfs:nano:Contract ; rdfs:range nano:System .
+
+# System ↔ Policy (respects + rules)
+nano:respects a own:ObjectProperty ; rdfs:domain rdfs:nano:System ; rdfs:range nano:Policy .
+nano:rules a own:ObjectProperty ; rdfs:domain rdfs:nano:Policy ; rdfs:range nano:System .
+
+# Policy ↔ Contract (mirrors + justifies)
+nano:mirrors a own:ObjectProperty ; rdfs:domain rdfs:nano:Policy ; rdfs:range nano:Contract .
+nano:justifies a own:ObjectProperty ; rdfs:domain rdfs:nano:Contract ; rdfs:range nano:Policy .
+
+# Service ↔ Plan (fulfills + describes)
+nano:fulfills a own:ObjectProperty ; rdfs:domain rdfs:nano:Service ; rdfs:range nano:Plan .
+nano:describes a own:ObjectProperty ; rdfs:domain rdfs:nano:Plan ; rdfs:range nano:Service .
+
+# Service ↔ Schedule (works + registers)
+nano:works a own:ObjectProperty ; rdfs:domain rdfs:nano:Service ; rdfs:range nano:Schedule .
+nano:registers a own:ObjectProperty ; rdfs:domain rdfs:nano:Schedule ; rdfs:range nano:Service .
+
+# Schedule ↔ Plan (separates + schemes)
+nano:separates a own:ObjectProperty ; rdfs:domain rdfs:nano:Schedule ; rdfs:range nano:Plan .
+nano:schemes a own:ObjectProperty ; rdfs:domain rdfs:nano:Plan ; rdfs:range nano:Schedule .
+
+# NanoService ↔ Task (executes + defines)
+nano:executes a own:ObjectProperty ; rdfs:domain rdfs:nano:NanoService ; rdfs:range nano:Task .
+nano:defines a own:ObjectProperty ; rdfs:domain rdfs:nano:Task ; rdfs:range nano:NanoService .
+
+# NanoService ↔ Message (sends + belongsTo)
+nano:runs a own:ObjectProperty ; rdfs:domain rdfs:nano:NanoService ; rdfs:range nano:Process .
+nano:needs a own:ObjectProperty ; rdfs:domain rdfs:nano:Process ; rdfs:range nano:NanoService .
+
+# Message ↔ Task (represents + reports)
+nano:represents a own:ObjectProperty ; rdfs:domain rdfs:nano:Message ; rdfs:range nano:Task .
+nano:reports a own:ObjectProperty ; rdfs:domain rdfs:nano:Task ; rdfs:range nano:Message .
+
+# Process ↔ Motivation (targets + triggers)
+nano:targets a own:ObjectProperty ; rdfs:domain rdfs:nano:Process ; rdfs:range nano:Motivation .
+nano:triggers a own:ObjectProperty ; rdfs:domain rdfs:nano:Motivation ; rdfs:range nano:Process .
+
+# Process ↔ Instruction (runs + needs)
+nano:runs a own:ObjectProperty ; rdfs:domain rdfs:nano:Process ; rdfs:range nano:Instruction .
+nano:needs a own:ObjectProperty ; rdfs:domain rdfs:nano:Instruction ; rdfs:range nano:Process .

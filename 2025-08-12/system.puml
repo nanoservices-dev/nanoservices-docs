@@ -1,0 +1,79 @@
+@startuml
+title nServices – World / Idea / Persona / Perspective
+
+' --- Grundtypen
+interface Entity {
+  +version : String
+}
+
+interface World {
+  +resource : String
+}
+
+interface Idea {
+  +type : String
+}
+
+
+
+' --- Ableitungen in World
+class Manifestation {
+}
+
+class Port {
+  +contentType : String
+}
+
+class System {
+  +uId : String
+  +elements : List<Manifestation>
+}
+
+' --- Idee-Seite
+class Blueprint {
+}
+note right of Blueprint
+  Self-Description / Soll-Zustand
+  Policies, Schedules, Typen
+end note
+
+' --- Persona: Zwischenraum
+class Persona {
+}
+
+' --- View / Perspective
+interface View {
+  +purpose : String
+}
+
+class Perspective {
+}
+
+' --- Vererbungen (statt implements)
+Entity <|-- Manifestation
+World <|-- Manifestation
+
+Manifestation <|-- Port
+Port <|-- System
+
+Entity <|-- World
+Entity <|-- Idea
+
+Idea <|-- Blueprint
+World <|-- System
+
+World <|-- Persona
+Idea <|-- Persona
+Entity <|-- Persona
+
+Port <|-- Perspective
+View <|-- Perspective
+Entity <|-- Perspective
+
+' --- Relationen
+Blueprint --> System : describes / maps
+Persona --> Blueprint : references
+Persona --> System : references
+Perspective --> Manifestation : views
+
+@enduml

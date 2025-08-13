@@ -1,0 +1,38 @@
+@prefix nano: <https://nanoservices.dev/ont#> .
+@prefix dcat: <http://www.w3.org/ns/dcat#> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix schema: <https://schema.org/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
+
+nano:system a nano:NanoSystem ;
+    dct:identifier "mySystem" ;
+    schema:host "worker.nanoservices.dev" ;
+    schema:process "supervisor-fuseki" .
+
+
+nano:fusekiService a nano:NanoService ;
+    nano:partOfSystem nano:system ;
+
+nano:fusekiTemporalService a nano:NanoService ;
+    nano:partOfSystem nano:fusekiService ;
+
+nano:fusekiHttpService a nano:NanoService ;
+    nano:partOfSystem nano:fusekiService ;
+    dcat:endpointURL "http://localhost:8080/api/fuseki/" ;
+    nano:taskQueue "FUSEKI_TASKS" ;
+    nano:artifact "fuseki-worker-0.0.1-SNAPSHOT.jar" ;
+    dct:title "Fuseki NanoService"@de ;
+    owl:versionInfo "1.0.0" .
+
+nano:getGraphTask a nano:NanoServiceTask, sosa:Procedure ;
+    nano:partOfService nano:fusekiHttpService ;
+    nano:activityName "getGraph" ;
+    nano:command "get" ;
+    nano:taskQueue "FUSEKI_TASKS" .
+
+
+
+
+nano:getGraphTask dct:identifier "urn:nanoservices:fuseki:get" .

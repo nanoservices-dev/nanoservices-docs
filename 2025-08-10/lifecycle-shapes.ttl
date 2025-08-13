@@ -1,0 +1,16 @@
+@prefix sh:   <http://www.w3.org/ns/shacl#> .
+@prefix nano: <https://nanoservices.dev/ontology#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+# LifecycleSpec integrity
+nano:LifecycleSpecShape a sh:NodeShape ;
+  sh:targetClass nano:LifecycleSpec ;
+  sh:property [ sh:path nano:appliesToClass ; sh:minCount 1 ; sh:maxCount 1 ] ;
+  sh:property [ sh:path nano:hasState ; sh:minCount 1 ] ;
+  sh:property [ sh:path nano:hasTransition ; sh:minCount 1 ] .
+
+nano:TransitionShape a sh:NodeShape ;
+  sh:targetClass nano:Transition ;
+  sh:property [ sh:path nano:fromState ; sh:minCount 1 ; sh:maxCount 1 ] ;
+  sh:property [ sh:path nano:toState   ; sh:minCount 1 ; sh:maxCount 1 ] ;
+  sh:property [ sh:path nano:action    ; sh:minCount 1 ; sh:maxCount 1 ] .

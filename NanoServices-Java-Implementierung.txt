@@ -1,0 +1,517 @@
+~/dev/nanoservices/java/nanoservices-core/src/main (main) ➜ tree
+.
+├── java
+│   └── dev
+│       └── nanoservices
+│           ├── model
+│           │   ├── grounding
+│           │   │   ├── Grounding.java
+│           │   │   ├── HttpGrounding.java
+│           │   │   └── TemporalGrounding.java
+│           │   ├── Message.java
+│           │   ├── policy
+│           │   │   ├── AccessPolicy.java
+│           │   │   ├── ExecutionPolicy.java
+│           │   │   └── Policy.java
+│           │   ├── service
+│           │   │   ├── Actuator.java
+│           │   │   ├── CrudService.java
+│           │   │   ├── DynamicService.java
+│           │   │   ├── Sensor.java
+│           │   │   └── Service.java
+│           │   ├── system
+│           │   │   ├── PhysicalSystem.java
+│           │   │   └── System.java
+│           │   └── task
+│           │       ├── CreateTask.java
+│           │       ├── DeleteTask.java
+│           │       ├── ReadTask.java
+│           │       ├── Task.java
+│           │       └── UpdateTask.java
+│           └── util
+│               ├── PolicyUtils.java
+│               └── printModelToConsole.sh
+└── resources
+
+
+
+===== Message.java =====
+package dev.nanoservices.model;
+
+import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.ResourceFactory;
+
+import java.io.Serializable;
+import java.util.Locale;
+import java.util.Objects;
+
+/**
+ * <p>Zentrales Objekt zum Datenaustausch im nanoServices-System</p>
+ *
+ * <p>Das Objekt wird über den Temporal-Workflow/Activity-Stack transportiert
+ * Außer für speziell performante Entwicklungen java/dto/java (siehe z.B. fuseki<->jena-Verbindung)
+ * läuft SÄMTLICHE Information über Objekte dieser Klasse!</p>
+ *
+ * <p>Die Klasse erzeugt unveränderliche Objekte und enthält deswegen keine setter (technisch notwendige Ausnahme Temporal: siehe workFlowID, runID)!
+
+ *
+ * <p>Sample Usage:</p>
+ *
+ * <p>// Create message to fetch a Graph<br>
+ * NanoServiceMessage msg = new NanoServiceMessage(
+ *     ResourceFactory.createResource("urn:system:Supervisor:listProcesses"), null);<br>
+ * // Prüfen, ob Resource eine URN ist:<br>
+ * if (msg.isUrn(msg.getResource())) {<br>
+ *     // interne URN-Verarbeitung<br>
+ * }</p>
+ */
+public class Message implements Serializable {
+
+    /**
+     *  <p>Resourcen-Definition der Information</p>
+     *  <p>Der Typ ist nur wegen der Serialisierung beim Transport keine Resource.
+     *  Es gibt getResource() und setResource(Resource) als Convenience! Bitte die nutzen! </p>
+     *  URI der Information,
+     *  <li>für interne Referenzierung URN urn:system:Supervisor:ListProcesses</li>
+     *  <li>für externe URLs <a href="http://nanoservices.dev/ontology/Service">...</a></li>
+     *  <p>Das Feld resource ist grundsätzlich als absolute URI zu wählen.
+     *  Oder es ist null: eine Nachricht, die die Herkunft aus Detenschutzgründen verschleiert</p>
+     */
+    private String resourceAsString;
+
+    /**
+     * <p>die eigentliche (in aller Regel semantisch codierte) Information der Message
+     * Beispiele:
+     *    <li>foaf-Daten zu einer Person</li>
+     *    <li>die OWL-S-Beschreibung eines Service</li>
+     *    <li>die Prozesstemperatur (z.B. als float, uncodierter Wert, siehe "Semantic Enrichment"</li>
+     *
+     */
+    private String information;
+
+    /**
+     * <p>Content Type der Information (MIME), nach IANA/RFC-Standard</p>
+     * <p>/**
+     *     <a href="https://www.iana.org/assignments/media-types/media-types.xhtml">IANA Media Type Registry</a> / <a href="https://datatracker.ietf.org/doc/html/rfc2046">RFC 2046</a></p
+     *     Beispiele, bzw. v.a.:
+     *     <li>text/turtle</li>
+     *     <li>application/rdf+xml</li>
+     *     <li>application/json</li>
+     * </p>
+     */
+    private String contentType;
+
+    /**
+     * <p>String-codierte Verknüpfung zur korrelierenden Policy</p>
+     */
+    private String policyReference;
+
+    /**
+     * <p>Enthält etwaige Zusatzdaten für den jeweils angeforderten Task.</p>
+     * <p>Saubere klassische Workflow-Implementierungen ignorieren dieses Feld!</p>
+     * <p>Im Normalfall kommt die Definition des auszuführenden Tasks über den Aufruf des Workflows!</p>
+     * <p>Beim DynamicWorker dagegen definiert (String) taskPayload den Subtask, und damit den eigentlichen Task!</p>
+     */
+    private String taskPayload;
+
+    /**
+     * <p>optionales Data Transfer Object als Informationsträger
+     * Nur relevant für High Performance java/java Services</p>
+     *
+     * Konvention:
+     * Service checkt information==null -> check for dto!
+     */
+    private Object dto;
+
+    /**
+     * <p>Temporal Workflow ID:</p>
+     * <p>Unique ID für den Temporal-Workflow</p>
+     * <p>Wird direkt aus dem Rückgabewert gesetzt, wenn der Workflow vom Service bei Temporal angemeldet wird</p>
+     * Setter ist aus technischen Gründen für Temporal notwendig, ansonsten bleibt die Klasse immutable.
+     */
+    private String workflowId;
+
+    /**
+     * <p>zweite unique ID für den tatsächlich ausgeführten Prozess des Workflows</p>
+     * <p>Diese ID steht am Anfang noch nicht fest</p>
+     * <p>Wird "nachgetragen", wenn verfügbar</p>
+     * Setter ist aus technischen Gründen für Temporal notwendig, ansonsten bleibt die Klasse immutable.
+     */
+    private String runId;
+
+    /**
+     * <p>Gesamt-Konstruktor</p>
+     * <p>Setzt alle final-Attribute der Message: resource, information, taskPayload und/oder dto</p>
+     * <p>workflowId und runId werden vom Service über setter gesetzt</p>
+     * <p>workflowId direkt nach dem Erzeugen aus dem Returnwert</p>
+     *
+     * @param resource Optional, kann null sein.
+     * @param information Optional, kann null sein.
+     * @param taskPayload Optional, kann null sein.
+     * @param policyReference Optional, kann null sein.
+     * @param dto Optional, kann null sein.
+     */
+    public Message(Resource resource, String information, String contentType, String policyReference, String taskPayload, Object dto) {
+        this.resourceAsString = (resource == null) ? null : resource.getURI();
+        this.information = information;
+        this.contentType = contentType;
+        this.policyReference = policyReference;
+        this.taskPayload = taskPayload;
+        this.dto = dto;
+    }
+
+    /**
+     * Empty Constructor für Jackson-Serialisierung benötigt. Empfehlung: meiden!
+     */
+    public Message(){
+        this.resourceAsString = null;
+        this.information = null;
+        this.contentType = null;
+        this.policyReference = null;
+        this.taskPayload = null;
+        this.dto = null;
+    }
+
+    /**
+     * <p>Default-Konstruktor</p>
+     * Standard-Message-Generierung via Resource und/oder Information
+     *
+     * @param resource Siehe {@link #resourceAsString}
+     * @param information Siehe {@link #information}
+     */
+    public Message(Resource resource, String information, String contentType) {
+        this.resourceAsString = (resource == null) ? null : resource.getURI();
+        this.information = information;
+        this.contentType = contentType;
+        this.policyReference = null;
+        this.taskPayload = null;
+        this.dto = null;
+    }
+
+    // Getter & Setter
+    public String getResourceAsString() { return resourceAsString; }
+
+    /**
+     * <p>Gibt das resource-Attribut als Jena-Resource-Objekt aus</p>
+     *
+     * <p>Durch die JSON-Serialisierung beim Temporal-Transport kann die resource leider keine (komplexere) Resource sein.
+     * Getter und Setter für Jena sind Convenience-Funktionen (und sollen quasi den Weg über String verschleiern).<p>
+     *
+     * {@link #resourceAsString}
+     *
+     * @return resource als Jena-Resource
+     */
+    public Resource getResource() {
+        if (resourceAsString == null) return null;
+        return ResourceFactory.createResource(resourceAsString);
+    }
+
+    public String getInformation() { return information; }
+    public String getContentType() { return contentType; }
+
+    public Object getDto() { return dto; }
+    public String getTaskPayload() { return taskPayload; }
+    public String getPolicyReference() { return policyReference; }
+
+    public String getWorkflowId() { return workflowId; }
+    public String getRunId() { return runId; }
+
+    /**
+     * <p>Setzt das resource-Attribut über ein Jena-Resource-Objekt</p>
+     *
+     * Durch die JSON-Serialisierung beim Temporal-Transport kann die resource leider keine (komplexere) Resource sein.
+     * Getter und Setter für Jena sind Convenience-Funktionen.
+     *
+     * @return
+     */
+    public void setResourceAsString(String resourceAsString) {
+        this.resourceAsString = resourceAsString;
+    }
+
+    public void setResource(Resource resource) {
+        this.resourceAsString = (resource == null) ? null : resource.getURI();
+    }
+
+
+    public void setInformation(String information) {
+        this.information = information;
+    }
+
+    public void setContentType(String contentType) {
+        this.contentType = contentType;
+    }
+
+    public void setPolicyReference(String policyReference) {
+        this.policyReference = policyReference;
+    }
+
+    public void setTaskPayload(String taskPayload) {
+        this.taskPayload = taskPayload;
+    }
+
+    public void setDto(Object dto) {
+        this.dto = dto;
+    }
+
+    /**
+     * <p>Setzt die Temporal WorkflowId für die Message</p>
+     * Setter ist aus technischen Gründen für Temporal notwendig, ansonsten bleibt die Klasse immutable.
+     * @param workflowId Siehe {@link #workflowId}
+     */
+    public void setWorkflowId(String workflowId) { this.workflowId = workflowId; }
+
+    /**
+     * <p>Setzt die Temporal unique RunId</p>
+     * Setter ist aus technischen Gründen für Temporal notwendig, ansonsten bleibt die Klasse immutable.
+     * @param runId {@link #runId}
+     */
+    public void setRunId(String runId) { this.runId = runId; }
+
+    /**
+     * <p>Checkt, ob die Resource zu einem Temporal-Workflow gehört:</p>
+     * WorkflowId wird von Temporal direkt gesetzt
+     * @return Resultat der Prüfung
+     */
+    public boolean targetsTemporal() {
+        return workflowId != null && !workflowId.isEmpty();
+    }
+
+    /**
+     * Prüft (als schnelle Prüfung, kein Valistätscheck!), ob die Resource eine URN ist
+     * @return Resultat der Prüfung
+     */
+    public boolean isUrn() {
+        Resource res = getResource();
+        if (res == null || res.getURI() == null) return false;
+        return res.getURI().toLowerCase(Locale.ROOT).startsWith("urn:");
+    }
+
+
+    /**
+     * Prüft (als schnelle Prüfung, kein Valistätscheck!), ob die Resource eine URL ist
+     * @return Resultat der Prüfung
+     */
+    public boolean isUrl() {
+        Resource res = getResource();
+        if (res == null || res.getURI() == null) return false;
+        String uri = res.getURI();
+        int colonIndex = uri.indexOf(':');
+        if (colonIndex == -1) return false; // Kein Schema
+        String schema = uri.substring(0, colonIndex).toLowerCase(Locale.ROOT);
+        // "urn" ist explizit kein URL-Schema
+        return !schema.equals("urn");
+    }
+
+    /**
+     * Prüft die Gleichheit ohne workflowId/runId,
+     * dient also nur zum semantischen Vergleich
+     * @param o Vergleichsobjekt
+     * @return Resultat der Prüfung
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Message that = (Message) o;
+        return Objects.equals(getResourceAsString(), that.getResourceAsString()) && Objects.equals(getInformation(), that.getInformation()) && Objects.equals(getTaskPayload(), that.getTaskPayload()) && Objects.equals(getDto(), that.getDto());
+    }
+
+    /**
+     * Gibt den Hashcode ohne Einbeziehung der workflowId/runId aus,
+     * dient also nur zum semantischen Vergleich
+     * @return Hash-Code der Message
+     */
+    @Override
+    public int hashCode() {
+        return Objects.hash(getResourceAsString(), getInformation(), getTaskPayload(), getDto());
+    }
+}
+===== grounding/Grounding.java =====
+package dev.nanoservices.model.grounding;
+
+public class Grounding {
+}
+
+===== grounding/HttpGrounding.java =====
+package dev.nanoservices.model.grounding;
+
+public class HttpGrounding extends Grounding {
+}
+
+===== grounding/TemporalGrounding.java =====
+package dev.nanoservices.model.grounding;
+
+public class TemporalGrounding extends Grounding {
+}
+
+===== policy/AccessPolicy.java =====
+package dev.nanoservices.model.policy;
+
+public class AccessPolicy extends Policy {
+}
+
+===== policy/ExecutionPolicy.java =====
+package dev.nanoservices.model.policy;
+
+public class ExecutionPolicy extends Policy {
+}
+
+===== policy/Policy.java =====
+package dev.nanoservices.model.policy;
+
+public class Policy {
+}
+
+===== service/Actuator.java =====
+package dev.nanoservices.model.service;
+
+public abstract class Actuator implements Service {
+}
+
+===== service/CrudService.java =====
+package dev.nanoservices.model.service;
+
+import dev.nanoservices.model.task.Task;
+
+public abstract class CrudService implements Service {
+
+    protected Task create;
+    protected Task read;
+    protected Task update;
+    protected Task delete;
+
+}
+
+===== service/DynamicService.java =====
+package dev.nanoservices.model.service;
+
+import dev.nanoservices.model.task.Task;
+
+public abstract class DynamicService implements Service {
+
+    protected Task dynamicTask;
+
+}
+
+===== service/Sensor.java =====
+package dev.nanoservices.model.service;
+
+public abstract class Sensor implements Service {
+}
+
+===== service/Service.java =====
+package dev.nanoservices.model.service;
+
+
+import dev.nanoservices.model.system.System;
+import dev.nanoservices.model.task.Task;
+import org.apache.jena.rdf.model.Resource;
+
+import java.util.HashMap;
+
+public interface Service extends System {
+
+    HashMap<Resource, Task> getTasks();
+
+}
+===== system/PhysicalSystem.java =====
+package dev.nanoservices.model.system;
+
+import dev.nanoservices.model.grounding.Grounding;
+import dev.nanoservices.model.policy.Policy;
+import org.apache.jena.rdf.model.Resource;
+
+import java.util.HashMap;
+
+public abstract class PhysicalSystem implements System{
+
+    protected int Uid;
+    protected Policy policy;
+    protected Grounding grounding;
+    protected HashMap<Resource, System> subSystems;
+
+    @Override
+    public int getUid() { return this.Uid; }
+    @Override
+    public Policy getPolicy() { return policy; }
+    @Override
+    public Grounding getGrounding() { return grounding; }
+    @Override
+    public HashMap<Resource, System> getSubSystems() { return subSystems; }
+
+}
+
+===== system/System.java =====
+package dev.nanoservices.model.system;
+
+import dev.nanoservices.model.grounding.Grounding;
+import dev.nanoservices.model.policy.Policy;
+import org.apache.jena.rdf.model.Resource;
+import java.util.HashMap;
+
+public interface System {
+
+    int getUid();
+
+    Policy getPolicy();
+    Grounding getGrounding();
+    HashMap<Resource, System> getSubSystems();
+
+    void updatePolicy(Policy policy);
+    void updateGrounding(Grounding grounding);
+}
+
+===== task/CreateTask.java =====
+package dev.nanoservices.model.task;
+
+public interface CreateTask extends Task {}
+
+===== task/DeleteTask.java =====
+package dev.nanoservices.model.task;
+
+public interface DeleteTask extends Task {}
+
+===== task/ReadTask.java =====
+package dev.nanoservices.model.task;
+
+public interface ReadTask extends Task {}
+
+===== task/Task.java =====
+package dev.nanoservices.model.task;
+
+import dev.nanoservices.model.Message;
+
+/**
+ * <p>Interface für NanoServices.</p>
+ * <p>Alle NanoServices müssen dieses Interface implementieren.</p>
+ * <p>Die Hauptmethode verarbeitet eine Nachricht und gibt das (semantisch angereicherte) Ergebnis zurück.</p>
+ */
+public interface Task {
+
+    /**
+     * <p>Verarbeitet die eingehende Nachricht und gibt eine Antwort zurück.</p>
+     *
+     * @param input Eingehende {@link Message}
+     * @return Antwort-{@link Message}
+     */
+    Message process(Message input);
+
+}
+===== task/UpdateTask.java =====
+package dev.nanoservices.model.task;
+
+public interface UpdateTask extends Task {}
+~/dev/nanoservices/java/nanoservices-core/src/main/java/dev/nanoservices/util (main) ➜ 
+
+
+
+
+
+
+
+
+
+
+
+
+

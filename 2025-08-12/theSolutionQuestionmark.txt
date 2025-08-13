@@ -1,0 +1,25 @@
+
+
+Entity
+
+World extends Entity
+Idea extends Entity
+
+Persona{
+    World worldAspect;
+    Idea ideaAspect;
+}
+
+Manifestation extends World
+Transformation extends Idea
+
+Projection{
+    Manifestation worldAspect;
+    Transformation ideaAspect;
+}
+
+Port extends Projection
+
+System extends Port
+
+Service extends System

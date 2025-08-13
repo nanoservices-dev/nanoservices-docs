@@ -1,0 +1,53 @@
+@startuml
+title nServices — Kernmodell
+
+' === Basistyp ===
+interface Entity {
+  +version : String
+  +label   : String
+  +comment : String
+}
+
+' === Polaritäten ===
+class World {
+  +status : String
+}
+class Idea {
+  +type : String
+}
+
+Entity <|-- World
+Entity <|-- Idea
+
+' === Manifestation (real gebunden) ===
+class Manifestation {
+  +resource : String
+}
+World <|-- Manifestation
+
+' === Transformation (Zweck/Funktion) ===
+class Transformation {
+  +purpose : String
+}
+Idea <|-- Transformation
+
+' === Port (Membran, klassifizierter IO auf Manifestation) ===
+class Port {
+  +contentType : String
+}
+Manifestation <|-- Port
+
+' === View (Self-Description / Sichtdefinition) ===
+class View {
+  +selfDescription : String  ' z.B. URI/IRI/Path zur Selbstdokumentation
+}
+Idea <|-- View
+
+' === System (in World verankert, enthält reale Teile) ===
+class System {
+  +uId      : String
+  +elements : List<Manifestation>
+}
+Port <|-- System
+
+@enduml

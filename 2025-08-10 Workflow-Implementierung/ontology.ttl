@@ -1,0 +1,69 @@
+@prefix nano: <https://nanoservices.dev/ontology#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+
+#################################################################
+# nanoServices — core ontology (with "one World" + task workflows)
+#################################################################
+
+nano:Entity a owl:Class ;
+  rdfs:label "Entity" .
+
+# Top-level
+nano:World  a owl:Class ; rdfs:subClassOf nano:Entity ; rdfs:label "World" .
+nano:Person a owl:Class ; rdfs:subClassOf nano:Entity ; rdfs:label "Person" .
+nano:Idea   a owl:Class ; rdfs:subClassOf nano:Entity ; rdfs:label "Idea" .
+
+[nano:World owl:disjointWith nano:Person, nano:Idea] .
+
+# Operational (kept independent from World via inWorld pointer)
+nano:System      a owl:Class ; rdfs:subClassOf nano:Entity ; rdfs:label "System" .
+nano:Service     a owl:Class ; rdfs:subClassOf nano:Entity ; rdfs:label "Service (Worker)" .
+nano:NanoService a owl:Class ; rdfs:subClassOf nano:Service ; rdfs:label "NanoService (Activity)" .
+nano:Message     a owl:Class ; rdfs:subClassOf nano:Entity ; rdfs:label "Message" .
+
+# Idea-side specifications (declarative)
+nano:PlanSpec  a owl:Class ; rdfs:subClassOf nano:Idea ; rdfs:label "PlanSpec" .
+nano:TaskSpec  a owl:Class ; rdfs:subClassOf nano:Idea ; rdfs:label "TaskSpec (atomic)" .
+nano:StepSpec  a owl:Class ; rdfs:subClassOf nano:Idea ; rdfs:label "StepSpec" .
+nano:Grounding a owl:Class ; rdfs:subClassOf nano:Idea ; rdfs:label "Grounding" .
+nano:TemporalActivityGrounding a owl:Class ; rdfs:subClassOf nano:Grounding ;
+  rdfs:label "TemporalActivityGrounding" .
+nano:HttpGrounding a owl:Class ; rdfs:subClassOf nano:Grounding ; rdfs:label "HTTP grounding" .
+
+# Task workflow model (1 task = 1 workflow = 1 activity orchestration)
+nano:TaskWorkflowDefinition a owl:Class ; rdfs:subClassOf nano:Entity ;
+  rdfs:label "TaskWorkflowDefinition" .
+
+nano:TaskRun a owl:Class ; rdfs:subClassOf prov:Activity ;
+  rdfs:label "TaskRun (short-lived workflow run)" .
+
+# The one World instance
+nano:TheWorld a nano:World ;
+  rdfs:label "The one and only World" ;
+  rdfs:comment "Axiom of energy efficiency: exactly one World instance used by all other entities." .
+
+nano:inWorld a owl:ObjectProperty, owl:FunctionalProperty ;
+  rdfs:domain nano:Entity ; rdfs:range nano:World ;
+  rdfs:label "in world" .
+
+nano:Person rdfs:subClassOf [ a owl:Restriction ; owl:onProperty nano:inWorld ; owl:hasValue nano:TheWorld ] .
+nano:Service rdfs:subClassOf [ a owl:Restriction ; owl:onProperty nano:inWorld ; owl:hasValue nano:TheWorld ] .
+
+# Datatype props
+nano:name a owl:DatatypeProperty ; rdfs:domain nano:Person ; rdfs:range xsd:string ; rdfs:label "name" .
+nano:when a owl:DatatypeProperty ; rdfs:domain nano:Entity ;  rdfs:range xsd:dateTime ; rdfs:label "when" .
+
+# Object props (minimal, verb-neutral)
+nano:hasTask       a owl:ObjectProperty ; rdfs:domain nano:PlanSpec ; rdfs:range nano:TaskSpec .
+nano:hasGrounding  a owl:ObjectProperty ; rdfs:domain nano:TaskSpec ; rdfs:range nano:Grounding .
+nano:hostsNService a owl:ObjectProperty ; rdfs:domain nano:Service ;  rdfs:range nano:NanoService .
+nano:invokesNService a owl:ObjectProperty ; rdfs:domain nano:TaskRun ; rdfs:range nano:NanoService .
+nano:producedMessage a owl:ObjectProperty ; rdfs:domain nano:TaskRun ; rdfs:range nano:Message .
+nano:implementsTaskSpec a owl:ObjectProperty ; rdfs:domain nano:TaskWorkflowDefinition ; rdfs:range nano:TaskSpec .
+
+# Optional: carry IDs
+nano:workflowId a owl:DatatypeProperty ; rdfs:domain nano:TaskRun ; rdfs:range xsd:string .
+nano:runId      a owl:DatatypeProperty ; rdfs:domain nano:TaskRun ; rdfs:range xsd:string .
