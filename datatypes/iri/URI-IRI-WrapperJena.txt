@@ -1,0 +1,122 @@
+
+
+
+B) Dünner Value-Typ für IRIs (wenn ihr IRI/BlankNode sauber trennen wollt)
+
+Kleiner Wrapper, der Jena-IRI validiert und optional Blank Nodes erlaubt:
+
+
+
+public sealed interface RdfIdentifier permits RdfIdentifier.Iri, RdfIdentifier.BNode {
+  record Iri(String value) implements RdfIdentifier {
+    public Iri {
+      var iri = org.apache.jena.iri.IRIFactory.jenaImplementation().create(value);
+      if (iri.hasViolation(true)) throw new IllegalArgumentException("Bad IRI: " + value);
+    }
+  }
+  record BNode(String id) implements RdfIdentifier {} // _:id (optional)
+}
+
+
+Adapter nach Jena:
+
+
+static Resource toResource(Model m, RdfIdentifier id) {
+  return switch (id) {
+    case RdfIdentifier.Iri i -> m.createResource(i.value());
+    case RdfIdentifier.BNode b -> m.createResource(AnonId.create(b.id()));
+  };
+}
+
+Komfort:
+
+static RdfIdentifier.Iri iriFrom(URI uri) { return new RdfIdentifier.Iri(uri.toString()); }
+
+
+
+Damit könnt ihr an API-Grenzen weiterhin URI annehmen, intern aber RDF-korrekt arbeiten.
+
+Kurzfazit
+	•	Jena ignoriert java.net.URI nicht „aus Trotz“, sondern weil RDF-IRIs ≠ Java-URIs und weil Blank Nodes existieren.
+	•	Euer aktuelles Muster URI -> toString() -> Resource ist völlig legitim und bleibt so, solange ihr keine speziellen IRI-Fälle (Unicode/relativ) oder Blank Nodes braucht.
+	•	Falls ihr diese Fälle abdecken wollt, nehmt einen kleinen Wrapper mit Jena-IRI-Validierung – ohne euer bestehendes API-Design auf den Kopf zu stellen.
+
+
+
+  Okay, den Unterschied müssen wir natürlich abdecken (also alles ermöglichen).
+Jena macht dann null = null, "" = Blank Node, oder Inhalt, nehme ich an. -> Wir nehmen doch String (Unicode)
+
+
+
+Guter Punkt – wenn ihr alles (IRI, Blank Node, „kein Wert“) abdecken wollt, ist String (Unicode) im Domain-Modell ok. Wichtig ist nur, wie ihr im Adapter nach Jena verzweigt. Zwei Klarstellungen:
+	•	Leerer String "" ist kein Blank Node. Jena behandelt das als (relative) IRI-Label. Bitte nicht verwenden.
+	•	Blank Node erstellt ihr nicht über die String-Variante, sondern über die dedizierten Fabrikmethoden.
+
+Minimal-sichere Adapter-Variante
+
+
+import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.ResourceFactory;
+import org.apache.jena.rdf.model.AnonId;
+
+// Fall A: benannte Ressource (IRI) ODER frischer Blank Node (bei null)
+static Resource toResource(String iriOrNull) {
+    return iriOrNull == null
+        ? ResourceFactory.createResource()                 // Blank Node (frisch, anonym)
+        : ResourceFactory.createResource(iriOrNull);       // IRI (Unicode erlaubt)
+}
+
+// Optional: Falls ihr AUSDRÜCKLICH eine Blank-Node-ID setzen wollt
+static Resource toBNode(String bnodeIdOrNull) {
+    return bnodeIdOrNull == null
+        ? ResourceFactory.createResource()                 // frischer Blank Node
+        : ResourceFactory.createResource(AnonId.create(bnodeIdOrNull));
+}
+
+
+Konvention (empfohlen):
+	•	null ⇒ Blank Node erzeugen (frisch).
+	•	Nicht-null, nicht-leer ⇒ IRI (Unicode-String) nutzen.
+	•	"" ⇒ verboten (pragmatisch abfangen und als Fehler behandeln).
+
+Damit könnt ihr in Message.java einfach String resource (Unicode) halten und habt im Wrapper die saubere Abbildung:
+	•	resource == null → Blank Node,
+	•	resource != null && !resource.isEmpty() → IRI,
+	•	optional separater Pfad, wenn ihr mal eine konkrete Blank-Node-ID braucht.
+
+Wenn ihr zusätzlich Validierung wollt (z. B. IRI wohlgeformt), könnt ihr im Adapter vor createResource(…) mit Jenas IRIFactory prüfen – das ändert eure API nicht.
+
+
+
+Also der normale Java-String ist Unicode, richtig? Und xsd:string auch?
+Oder kann man das noch forcieren in xml?
+
+
+Kurz & klar:
+	•	Java String: ja, ist Unicode (intern UTF-16 Code Units). Du kannst jedes Unicode-Zeichen darin halten.
+	•	xsd:string: ja, ist per XML Schema eine Folge von Unicode-Zeichen (keine Whitespace-Normalisierung, keine implizite Groß/Kleinschreibung, keine Normalisierung).
+
+„Unicode forcieren“ betrifft nur die Serialisierung (Bytes ↔ Zeichen), nicht den Datentyp selbst:
+	•	In XML/RDF/XML: setz die Deklaration und schreib auch tatsächlich in diesem Charset:
+
+  <?xml version="1.0" encoding="UTF-8"?>
+
+
+  in Java
+  try (var w = new OutputStreamWriter(out, StandardCharsets.UTF_8)) { ... }
+// oder
+Files.newBufferedWriter(path, StandardCharsets.UTF_8)
+
+
+	•	In Turtle/JSON-LD: die Specs erlauben Unicode; üblich ist UTF-8. Auch hier gilt: Writer/Stream mit UTF_8 öffnen.
+
+Extras (falls relevant):
+	•	IRIs (RDF 1.1) sind Unicode (RFC 3987). Nur wenn du sie als URI in anderen Systemen nutzt, musst du ggf. percent-encoden.
+	•	Weder xsd:string noch XML erzwingen Unicode-Normalisierung (NFC/NFD). Wenn ihr stabile Vergleiche/IDs braucht, normalisiert selbst vor dem Speichern.
+
+
+  	•	In Turtle/JSON-LD: die Specs erlauben Unicode; üblich ist UTF-8. Auch hier gilt: Writer/Stream mit UTF_8 öffnen.
+
+Extras (falls relevant):
+	•	IRIs (RDF 1.1) sind Unicode (RFC 3987). Nur wenn du sie als URI in anderen Systemen nutzt, musst du ggf. percent-encoden.
+	•	Weder xsd:string noch XML erzwingen Unicode-Normalisierung (NFC/NFD). Wenn ihr stabile Vergleiche/IDs braucht, normalisiert selbst vor dem Speichern.
