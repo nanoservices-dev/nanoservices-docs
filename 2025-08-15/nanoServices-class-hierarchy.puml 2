@@ -1,0 +1,159 @@
+@startuml
+' nanoServices — Class Hierarchy (current, with Entity root)
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam linetype ortho
+left to right direction
+
+package "World line" as W {
+  abstract class World
+  abstract class Manifestation
+  abstract class Port
+  abstract class System
+  abstract class Service
+  abstract class NanoService
+  abstract class Process
+}
+
+package "Idea line" as I {
+  abstract class Idea
+  abstract class Transformation
+  abstract class View
+  abstract class Contract
+  abstract class Plan
+  abstract class Task
+  abstract class Motivation
+}
+
+package "Bridge line" as B {
+  abstract class Entity
+  abstract class Persona
+  abstract class Projection
+  abstract class Perspective
+  abstract class Policy
+  abstract class Schedule
+  abstract class Message
+  abstract class Instruction
+}
+
+' Inheritance (within each line)
+World -|> Entity
+Idea  -|> Entity
+Persona -|> Entity
+Manifestation -|> World
+Port -|> Manifestation
+System -|> Port
+Service -|> System
+NanoService -|> Service
+Process -|> NanoService
+
+Transformation -|> Idea
+View -|> Transformation
+Contract -|> View
+Plan -|> Contract
+Task -|> Plan
+Motivation -|> Task
+
+Projection -|> Persona
+Perspective -|> Projection
+Policy -|> Perspective
+Schedule -|> Policy
+Message -|> Schedule
+Instruction -|> Message
+
+' Pair couplings (dashed)
+Persona .. Manifestation : pair
+Projection .. Port : pair
+Perspective .. View : pair
+Policy .. System : pair
+Policy .. Contract : pair
+Schedule .. Service : pair
+Schedule .. Plan : pair
+Message .. NanoService : pair
+Message .. Task : pair
+Instruction .. Process : pair
+Instruction .. Motivation : pair
+@enduml
+
+@startuml
+' nanoServices — Alternative: disjoint World/Idea roots (no Entity base)
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam linetype ortho
+left to right direction
+
+package "World line" as W2 {
+  abstract class World
+  abstract class Manifestation
+  abstract class Port
+  abstract class System
+  abstract class Service
+  abstract class NanoService
+  abstract class Process
+}
+
+package "Idea line" as I2 {
+  abstract class Idea
+  abstract class Transformation
+  abstract class View
+  abstract class Contract
+  abstract class Plan
+  abstract class Task
+  abstract class Motivation
+}
+
+package "Bridge line" as B2 {
+  abstract class Persona
+  abstract class Projection
+  abstract class Perspective
+  abstract class Policy
+  abstract class Schedule
+  abstract class Message
+  abstract class Instruction
+}
+
+' (Optional) marker interface to unify addressing/versioning
+interface Addressable {
+  +version() : String
+}
+' Only if desired, the three roots implement Addressable
+World ..|> Addressable
+Idea  ..|> Addressable
+' Bridge can implement it as well, if you want
+Persona ..|> Addressable
+
+' Inheritance per line
+Manifestation -|> World
+Port -|> Manifestation
+System -|> Port
+Service -|> System
+NanoService -|> Service
+Process -|> NanoService
+
+Transformation -|> Idea
+View -|> Transformation
+Contract -|> View
+Plan -|> Contract
+Task -|> Plan
+Motivation -|> Task
+
+Projection -|> Persona
+Perspective -|> Projection
+Policy -|> Perspective
+Schedule -|> Policy
+Message -|> Schedule
+Instruction -|> Message
+
+' Pair couplings (dashed)
+Persona .. Manifestation : pair
+Projection .. Port : pair
+Perspective .. View : pair
+Policy .. System : pair
+Policy .. Contract : pair
+Schedule .. Service : pair
+Schedule .. Plan : pair
+Message .. NanoService : pair
+Message .. Task : pair
+Instruction .. Process : pair
+Instruction .. Motivation : pair
+@enduml

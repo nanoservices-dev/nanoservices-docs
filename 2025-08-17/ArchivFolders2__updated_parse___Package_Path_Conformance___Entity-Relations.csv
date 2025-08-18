@@ -1,0 +1,23 @@
+Class,Kind,Package,ZIP path,Should live under,Exact path match,Relaxed match (w/o dev/nanoservices/),Extends Entity,Implements Entity
+Entity,class,dev.nanoservices,Entity.java,dev/nanoservices/Entity.java,False,True,False,False
+Idea,class,dev.nanoservices,Idea.java,dev/nanoservices/Idea.java,False,True,False,False
+World,class,dev.nanoservices,World.java,dev/nanoservices/World.java,False,True,False,False
+Persona,class,dev.nanoservices.entity,entity/Persona.java,dev/nanoservices/entity/Persona.java,False,True,True,False
+Projection,class,dev.nanoservices.entity.persona,entity/persona/Projection.java,dev/nanoservices/entity/persona/Projection.java,False,True,False,False
+Perspective,class,dev.nanoservices.entity.persona.projection,entity/persona/projection/Perspective.java,dev/nanoservices/entity/persona/projection/Perspective.java,False,True,False,False
+Policy,class,dev.nanoservices.entity.persona.projection.perspective,entity/persona/projection/perspective/Policy.java,dev/nanoservices/entity/persona/projection/perspective/Policy.java,False,True,False,False
+Schedule,class,dev.nanoservices.entity.persona.projection.perspective.policy,entity/persona/projection/perspective/policy/Schedule.java,dev/nanoservices/entity/persona/projection/perspective/policy/Schedule.java,False,True,False,False
+Message,class,dev.nanoservices.entity.persona.projection.perspective.policy.schedule,entity/persona/projection/perspective/policy/schedule/Message.java,dev/nanoservices/entity/persona/projection/perspective/policy/schedule/Message.java,False,True,False,False
+Instruction,class,dev.nanoservices.entity.persona.projection.perspective.policy.schedule.message,entity/persona/projection/perspective/policy/schedule/message/Instruction.java,dev/nanoservices/entity/persona/projection/perspective/policy/schedule/message/Instruction.java,False,True,False,False
+Transformation,class,dev.nanoservices.idea,idea/Transformation.java,dev/nanoservices/idea/Transformation.java,False,True,False,False
+View,class,dev.nanoservices.idea.transformation,idea/transformation/View.java,dev/nanoservices/idea/transformation/View.java,False,True,False,False
+Contract,class,dev.nanoservices.idea.transformation.view,idea/transformation/view/Contract.java,dev/nanoservices/idea/transformation/view/Contract.java,False,True,False,False
+Plan,class,dev.nanoservices.idea.transformation.view.contract,idea/transformation/view/contract/Plan.java,dev/nanoservices/idea/transformation/view/contract/Plan.java,False,True,False,False
+Task,class,dev.nanoservices.idea.transformation.view.contract.plan,idea/transformation/view/contract/plan/Task.java,dev/nanoservices/idea/transformation/view/contract/plan/Task.java,False,True,False,False
+Motivation,class,dev.nanoservices.idea.transformation.view.contract.plan.task,idea/transformation/view/contract/plan/task/Motivation.java,dev/nanoservices/idea/transformation/view/contract/plan/task/Motivation.java,False,True,False,False
+Manifestation,class,dev.nanoservices.world,world/Manifestation.java,dev/nanoservices/world/Manifestation.java,False,True,False,False
+Port,class,dev.nanoservices.world.manifestation,world/manifestation/Port.java,dev/nanoservices/world/manifestation/Port.java,False,True,False,False
+System,class,dev.nanoservices.world.manifestation.port,world/manifestation/port/System.java,dev/nanoservices/world/manifestation/port/System.java,False,True,False,False
+Service,class,dev.nanoservices.world.manifestation.port.system,world/manifestation/port/system/Service.java,dev/nanoservices/world/manifestation/port/system/Service.java,False,True,False,False
+NanoService,class,dev.nanoservices.world.manifestation.port.system.service,world/manifestation/port/system/service/NanoService.java,dev/nanoservices/world/manifestation/port/system/service/NanoService.java,False,True,False,False
+Process,class,dev.nanoservices.world.manifestation.port.system.service.nanoservice,world/manifestation/port/system/service/nanoservice/Process.java,dev/nanoservices/world/manifestation/port/system/service/nanoservice/Process.java,False,True,False,False
