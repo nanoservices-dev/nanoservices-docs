@@ -1,0 +1,76 @@
+@prefix nano: <https://nanoservices.dev/ontology#> .
+@prefix ex:   <https://nanoservices.dev/example#> .
+
+##### Ebene 1
+ex:marketWorld a nano:World ;
+  nano:ideas ex:goToMarketStrategy .
+
+ex:goToMarketStrategy a nano:Idea .
+
+ex:stakeholder a nano:Persona ;
+  nano:world ex:marketWorld ;
+  nano:idea  ex:goToMarketStrategy .
+
+##### Ebene 2
+ex:productInstance a nano:Manifestation ;
+  nano:transformations ex:productDefinition .
+
+ex:productDefinition a nano:Transformation .
+
+ex:offerProjection a nano:Projection ;
+  nano:world ex:productInstance ;
+  nano:idea  ex:productDefinition ;
+  nano:concretizes  ex:productInstance ;
+  nano:abstractsFrom ex:productDefinition .
+
+##### Ebene 3
+ex:salesChannel a nano:Port ;
+  nano:perspectives ex:euCustomerPerspective ;
+  nano:allows ex:euCustomerPerspective .
+
+ex:euCustomerPerspective a nano:Perspective .
+
+ex:channelView a nano:View ;
+  nano:world ex:salesChannel ;
+  nano:idea  ex:euCustomerPerspective .
+
+##### Ebene 4
+ex:productOrg a nano:System ;
+  nano:contracts ex:partnerAgreement ;
+  nano:serves    ex:partnerAgreement .
+
+ex:partnerAgreement a nano:Contract .
+
+ex:compliancePolicy a nano:Policy ;
+  nano:world  ex:productOrg ;
+  nano:idea   ex:partnerAgreement ;
+  nano:respects ex:productOrg ;
+  nano:mirrors  ex:partnerAgreement .
+
+##### Ebene 5
+ex:deliveryService a nano:Service ;
+  nano:plans     ex:goLivePlan ;
+  nano:fulfills  ex:goLivePlan .
+
+ex:goLivePlan a nano:Plan .
+
+ex:q3Roadmap a nano:Schedule ;
+  nano:world     ex:deliveryService ;
+  nano:idea      ex:goLivePlan ;
+  nano:separates ex:deliveryService ;
+  nano:sequences ex:goLivePlan .
+
+##### Ebene 6
+ex:devOpsTeam a nano:NanoService ;
+  nano:tasks    ex:goLiveStep ;
+  nano:executes ex:goLiveStep .
+
+ex:goLiveStep a nano:Task .
+
+ex:releaseNote a nano:Message ;
+  nano:world      ex:devOpsTeam ;
+  nano:idea       ex:goLiveStep ;
+  nano:belongsTo  ex:devOpsTeam ;
+  nano:represents ex:goLiveStep .
+
+ex:devOpsTeam nano:sends ex:releaseNote .

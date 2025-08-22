@@ -1,0 +1,77 @@
+@prefix nano: <https://nanoservices.dev/ontology#> .
+@prefix ex:   <https://nanoservices.dev/example#> .
+
+##### Ebene 1
+ex:ciWorld a nano:World ;
+  nano:ideas ex:ciStrategy .
+
+ex:ciStrategy a nano:Idea .
+
+ex:ciPersona a nano:Persona ;
+  nano:world ex:ciWorld ;
+  nano:idea  ex:ciStrategy .
+
+##### Ebene 2
+ex:buildArtifact a nano:Manifestation ;
+  nano:transformations ex:buildSpec .
+
+ex:buildSpec a nano:Transformation .
+
+ex:buildProjection a nano:Projection ;
+  nano:world ex:buildArtifact ;
+  nano:idea  ex:buildSpec ;
+  nano:simplifies ex:buildArtifact ;
+  nano:abstractsFrom ex:buildSpec .
+
+##### Ebene 3
+ex:repoPort a nano:Port ;
+  nano:perspectives ex:ciPerspective ;
+  nano:allows ex:ciPerspective .
+
+ex:ciPerspective a nano:Perspective .
+
+ex:repoView a nano:View ;
+  nano:world ex:repoPort ;
+  nano:idea  ex:ciPerspective .
+
+##### Ebene 4
+ex:ciPlatform a nano:System ;
+  nano:contracts ex:ciSLA ;
+  nano:serves   ex:ciSLA .
+
+ex:ciSLA a nano:Contract .
+
+ex:ciPolicy a nano:Policy ;
+  nano:world  ex:ciPlatform ;
+  nano:idea   ex:ciSLA ;
+  nano:respects ex:ciPlatform ;
+  nano:mirrors  ex:ciSLA .
+
+##### Ebene 5
+ex:buildService a nano:Service ;
+  nano:plans ex:releasePlan ;
+  nano:fulfills ex:releasePlan .
+
+ex:releasePlan a nano:Plan .
+
+ex:releaseSchedule a nano:Schedule ;
+  nano:world  ex:buildService ;
+  nano:idea   ex:releasePlan ;
+  nano:separates ex:buildService ;
+  nano:sequences ex:releasePlan .
+
+##### Ebene 6
+ex:ciWorker a nano:NanoService ;
+  nano:tasks ex:cutRelease ;
+  nano:executes ex:cutRelease .
+
+ex:cutRelease a nano:Task .
+
+ex:releaseEvent a nano:Message ;
+  nano:world      ex:ciWorker ;
+  nano:idea       ex:cutRelease ;
+  nano:belongsTo  ex:ciWorker ;
+  nano:represents ex:cutRelease .
+
+# optionaler Fluss
+ex:ciWorker nano:sends ex:releaseEvent .

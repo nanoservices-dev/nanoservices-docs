@@ -14,7 +14,16 @@
             <artifactId>nanoservices-core</artifactId>
             <version>0.2.0-SNAPSHOT</version>
         </dependency>
+
+        <dependency>
+            <groupId>dev.nanoservices</groupId>
+            <artifactId>nanoservices-jena</artifactId>
+            <version>0.2.0-SNAPSHOT</version>
+        </dependency>
+
     </dependencies>
+
+
 
     <properties>
         <maven.compiler.source>22</maven.compiler.source>
