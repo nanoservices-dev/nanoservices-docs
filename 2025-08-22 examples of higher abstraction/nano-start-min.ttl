@@ -1,0 +1,7 @@
+@prefix nano: <https://nanoservices.dev/ontology#> .
+@prefix ex:   <https://example.org/ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+ex:system a nano:System; rdfs:label "system"; nano:port ex:system_port .
+ex:crudGetTask a nano:NanoService; rdfs:label "crudGetTask"; nano:port ex:crudGetTask_port .
+ex:crudGetTask_port a nano:Port; nano:delegatesTo ex:system_port .
+ex:system_port a nano:Port .

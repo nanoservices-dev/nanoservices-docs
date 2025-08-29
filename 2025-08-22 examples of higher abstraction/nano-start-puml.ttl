@@ -1,0 +1,18 @@
+@prefix nano: <https://nanoservices.dev/ontology#> .
+@prefix ex:   <https://example.org/ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+# === Minimal start (no abstraction) ===
+ex:system a nano:System ;
+  rdfs:label "system" ;
+  nano:port ex:system#port .
+
+ex:crudGetTask a nano:NanoService ;
+  rdfs:label "crudGetTask" ;
+  nano:port ex:crudGetTask#port .
+
+# Delegation: NanoService's port -> System's port
+ex:crudGetTask#port a nano:Port ;
+  nano:delegatesTo ex:system#port .
+
+ex:system#port a nano:Port .

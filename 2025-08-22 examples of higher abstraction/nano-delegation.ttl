@@ -1,0 +1,39 @@
+@prefix nano: <https://nanoservices.dev/ontology#> .
+@prefix ex:   <https://example.org/ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+#########
+# Concrete, non-abstract demo
+# System with an internal NanoService. Both have ports.
+# A Frontend consumes the System's interface to ensure visible lines.
+#########
+
+### External consumer so lines appear
+ex:Frontend a nano:System ; rdfs:label "Frontend" ;
+  nano:port ex:Frontend_port .
+
+ex:Frontend_port a nano:Port ;
+  nano:requires ex:IOrderAPI_v1 .
+
+### Our main system with one internal NanoService
+ex:Shop a nano:System ; rdfs:label "Shop" ;
+  nano:port ex:Shop_port ;
+  nano:elements ex:OrderNS .   # host the NanoService (down-to-earth)
+
+ex:OrderNS a nano:NanoService ; rdfs:label "Order NS" ;
+  nano:port ex:OrderNS_port .
+
+### Ports + Perspectives
+# The System exposes IOrderAPI_v1, which the Frontend requires.
+# The NanoService also exposes the SAME interface, and the system delegates to it.
+ex:Shop_port a nano:Port ;
+  nano:allows ex:IOrderAPI_v1 .
+
+ex:OrderNS_port a nano:Port ;
+  nano:allows ex:IOrderAPI_v1 .
+
+# Delegation connector (explicit)
+ex:Shop_port nano:delegatesTo ex:OrderNS_port .
+
+# The perspective/interface
+ex:IOrderAPI_v1 a nano:Perspective ; rdfs:label "IOrderAPI_v1" .

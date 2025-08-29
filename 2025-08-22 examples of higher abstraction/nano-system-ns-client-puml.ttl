@@ -1,0 +1,33 @@
+@prefix nano: <https://nanoservices.dev/ontology#> .
+@prefix ex:   <https://example.org/ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+# === Minimal, concrete example ===
+# System + NanoService (with port & delegation) and a small client to force a visible line.
+
+ex:system a nano:System ;
+  rdfs:label "system" ;
+  nano:port ex:system_port ;
+  nano:elements ex:crudGetTask .
+
+ex:system_port a nano:Port ;
+  nano:allows ex:IOrderAPI_v1 .
+
+ex:crudGetTask a nano:NanoService ;
+  rdfs:label "crudGetTask" ;
+  nano:port ex:crudGetTask_port .
+
+ex:crudGetTask_port a nano:Port ;
+  nano:delegatesTo ex:system_port ;
+  nano:allows ex:IOrderAPI_v1 .
+
+# tiny client to make the line appear in the Component diagram
+ex:client a nano:System ;
+  rdfs:label "client" ;
+  nano:port ex:client_port .
+
+ex:client_port a nano:Port ;
+  nano:requires ex:IOrderAPI_v1 .
+
+ex:IOrderAPI_v1 a nano:Perspective ;
+  rdfs:label "IOrderAPI_v1" .

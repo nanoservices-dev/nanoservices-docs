@@ -1,0 +1,90 @@
+@prefix nano: <https://nanoservices.dev/ontology#> .
+@prefix ex:   <https://example.org/ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+#########
+# GOAL
+# - Show *visible connections* in your Component diagram (provided/required match).
+# - Move "down to earth": Systems that *host* NanoServices, with an executable Plan.
+#########
+
+### Systems (each with exactly one Port as "membrane")
+ex:OrderSys a nano:System ; rdfs:label "Order System" ;
+  nano:port ex:OrderSys_port ;
+  nano:elements ex:OrderService .
+
+ex:InventorySys a nano:System ; rdfs:label "Inventory System" ;
+  nano:port ex:InventorySys_port ;
+  nano:elements ex:StockService .
+
+ex:WarehouseSys a nano:System ; rdfs:label "Warehouse System" ;
+  nano:port ex:WarehouseSys_port ;
+  nano:elements ex:PickService, ex:NotifyService .
+
+### Ports with Perspectives (Interfaces)
+# Inventory exposes Stock API; Warehouse consumes it.
+ex:InventorySys_port a nano:Port ;
+  nano:allows   ex:IStockAPI_v1 .
+
+ex:WarehouseSys_port a nano:Port ;
+  nano:requires ex:IStockAPI_v1 ;
+  nano:allows   ex:IPickingAPI_v1, ex:IWebhookEvents_v1 .
+
+# Order consumes Picking API and exposes Order API.
+ex:OrderSys_port a nano:Port ;
+  nano:requires ex:IPickingAPI_v1 ;
+  nano:allows   ex:IOrderAPI_v1 .
+
+# (Optional) A 4th system could consume events (not drawn here to keep it compact)
+
+# Perspectives (Interfaces)
+ex:IStockAPI_v1       a nano:Perspective ; rdfs:label "IStockAPI_v1" .
+ex:IPickingAPI_v1     a nano:Perspective ; rdfs:label "IPickingAPI_v1" .
+ex:IOrderAPI_v1       a nano:Perspective ; rdfs:label "IOrderAPI_v1" .
+ex:IWebhookEvents_v1  a nano:Perspective ; rdfs:label "IWebhookEvents_v1" .
+
+
+#########
+# NanoServices hosted by Systems (for Activity diagram lanes)
+#########
+ex:OrderService  a nano:NanoService ; rdfs:label "Order Service" .
+ex:StockService  a nano:NanoService ; rdfs:label "Stock Service" .
+ex:PickService   a nano:NanoService ; rdfs:label "Pick Service" .
+ex:NotifyService a nano:NanoService ; rdfs:label "Notify Service" .
+
+
+#########
+# Concrete Plan with Tasks, Flow, Executors, Messages
+#########
+ex:FulfillmentPlan a nano:Plan ; rdfs:label "Fulfillment Plan" ;
+  nano:tasks ex:CreateOrder, ex:ReserveStock, ex:CreatePick, ex:StartPick, ex:CompletePick, ex:EmitWebhook .
+
+# Tasks (down-to-earth wording)
+ex:CreateOrder    a nano:Task ; rdfs:label "Create Order" .
+ex:ReserveStock   a nano:Task ; rdfs:label "Reserve Stock" .
+ex:CreatePick     a nano:Task ; rdfs:label "Create Pick" .
+ex:StartPick      a nano:Task ; rdfs:label "Start Pick" .
+ex:CompletePick   a nano:Task ; rdfs:label "Complete Pick" .
+ex:EmitWebhook    a nano:Task ; rdfs:label "Emit Webhook" .
+
+# Flow (precedes)
+ex:CreateOrder  nano:precedes ex:ReserveStock .
+ex:ReserveStock nano:precedes ex:CreatePick .
+ex:CreatePick   nano:precedes ex:StartPick .
+ex:StartPick    nano:precedes ex:CompletePick .
+ex:CompletePick nano:precedes ex:EmitWebhook .
+
+# Executors (NanoServices -> Tasks)
+ex:OrderService  nano:executes ex:CreateOrder .
+ex:StockService  nano:executes ex:ReserveStock .
+ex:PickService   nano:executes ex:CreatePick, ex:StartPick, ex:CompletePick .
+ex:NotifyService nano:executes ex:EmitWebhook .
+
+# Messages (produced/owned)
+ex:PickTicket a nano:Message ; rdfs:label "PickTicket" ;
+  nano:represents ex:CreatePick ;
+  nano:belongsTo ex:PickService .
+
+ex:WebhookEvent a nano:Message ; rdfs:label "WebhookEvent" ;
+  nano:represents ex:EmitWebhook ;
+  nano:belongsTo ex:NotifyService .
